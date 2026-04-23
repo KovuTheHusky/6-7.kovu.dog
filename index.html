@@ -266,6 +266,29 @@
             document.addEventListener('click', forceAudioPlay);
             document.addEventListener('touchstart', forceAudioPlay);
             document.addEventListener('keydown', forceAudioPlay);
+
+
+            // --- 5. THE EASTER EGG (KEYLOGGER) ---
+            let keyBuffer = '';
+            const secretCode = 'BALLS';
+
+            document.addEventListener('keydown', (e) => {
+                // Ignore modifier keys and ensure we're only grabbing single characters
+                if (e.key.length === 1) {
+                    // Add the new key to the string and make it uppercase
+                    keyBuffer += e.key.toUpperCase();
+                    
+                    // Keep the string trimmed to the length of our secret code to save memory
+                    if (keyBuffer.length > secretCode.length) {
+                        keyBuffer = keyBuffer.slice(-secretCode.length);
+                    }
+                    
+                    // Check if it matches!
+                    if (keyBuffer === secretCode) {
+                        document.getElementById('meme-gif').src = 'balls.gif';
+                    }
+                }
+            });
         });
     </script>
 </body>
