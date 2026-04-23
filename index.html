@@ -6,6 +6,7 @@
     <title>6️⃣7️⃣</title>
     <link rel="icon" href="https://kovu.dog/favicon.webp" />
     <style>
+      /* --- ALL CSS REMAINS EXACTLY THE SAME --- */
       body,
       html {
         margin: 0;
@@ -139,14 +140,14 @@
         border-radius: 40%;
       }
 
-      /* --- THE INVISIBLE INTERACTION BUTTON --- */
+      /* The invisible button */
       #interaction-overlay {
         position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
         height: 100vh;
-        z-index: 9999; /* Sits above everything */
+        z-index: 9999;
         background: transparent;
         cursor: pointer;
       }
@@ -155,7 +156,7 @@
   <body>
     <div id="interaction-overlay"></div>
 
-    <audio id="meme-audio" crossorigin="anonymous"></audio>
+    <audio id="meme-audio" playsinline></audio>
 
     <div id="chaos-container"></div>
     <div class="vhs-overlay"></div>
@@ -171,11 +172,14 @@
         );
 
         let audioCtx;
+        let isAudioInitialized = false;
 
         // --- 1. INITIALIZE WEB AUDIO EFFECTS IMMEDIATELY ---
         function initAudioEffects() {
+          if (isAudioInitialized) return;
+
           const AudioContext = window.AudioContext || window.webkitAudioContext;
-          audioCtx = new AudioContext();
+          audioCtx = new AudioContext(); // Starts suspended if autoplay is blocked
 
           const source = audioCtx.createMediaElementSource(memeAudio);
 
@@ -206,6 +210,7 @@
           const masterGain = audioCtx.createGain();
           masterGain.gain.value = 0.8;
 
+          // Route audio through filters. If audioCtx is suspended, output is silent!
           source.connect(highpass);
           highpass.connect(lowpass);
           lowpass.connect(distortion);
@@ -237,8 +242,11 @@
           noiseFilter.connect(noiseGain);
           noiseGain.connect(audioCtx.destination);
           noise.start();
+
+          isAudioInitialized = true;
         }
 
+        // Immediately build the filters
         initAudioEffects();
 
         function playTapePop() {
@@ -308,8 +316,8 @@
 
         setInterval(spawnArtifact, 50);
 
-        // --- 3. THE AUDIO PLAYLIST ---
-        const playlist = ["1.opus", "2.opus", "3.opus", "4.opus", "5.opus"];
+        // --- 3. THE AUDIO PLAYLIST (USING MP3) ---
+        const playlist = ["1.mp3", "2.mp3", "3.mp3", "4.mp3", "5.mp3"];
 
         for (let i = playlist.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -330,22 +338,24 @@
             .catch((e) => console.error("Playlist playback failed:", e));
         });
 
-        // --- 4. AUTOPLAY & INTERACTION FALLBACK ---
+        // --- 4. AUTOPLAY ATTEMPT & INTERACTION FALLBACK ---
         memeAudio
           .play()
           .then(() => {
-            if (audioCtx.state === "suspended") {
-              console.log(
-                "Audio playing, but Web Audio API suspended. Waiting for click to unmute.",
-              );
-            } else {
+            if (audioCtx.state === "running") {
+              // It worked immediately! We can safely delete the invisible button.
               console.log("Full VHS autoplay successful!");
-              // If autoplay works immediately with full audio context (rare), we can safely remove the overlay
               interactionOverlay.remove();
+            } else {
+              // The audio is technically playing, but WebAudio is suspended (Silent).
+              // We keep the overlay so the user can tap to resume the audioCtx.
+              console.log(
+                "Audio playing silently. Waiting for tap to resume VHS filters.",
+              );
             }
           })
           .catch((e) =>
-            console.log("Autoplay entirely blocked. Waiting for click."),
+            console.log("Autoplay entirely blocked. Waiting for tap."),
           );
 
         const forceAudioPlay = () => {
@@ -368,20 +378,19 @@
               })
               .catch(console.error);
           } else {
-            // Non-iOS devices just start listening
+            // Non-iOS devices
             window.addEventListener("devicemotion", handleShake);
           }
 
-          // Delete the overlay so it's gone forever
-          interactionOverlay.remove();
+          // Destroy the overlay so it's gone forever
+          if (document.body.contains(interactionOverlay)) {
+            interactionOverlay.remove();
+          }
           document.removeEventListener("keydown", forceAudioPlay);
         };
 
-        // Attach listeners to the invisible button instead of the document
         interactionOverlay.addEventListener("click", forceAudioPlay);
-        interactionOverlay.addEventListener("touchstart", forceAudioPlay);
-
-        // Keep keydown on document in case someone starts typing BALLS before clicking
+        interactionOverlay.addEventListener("touchend", forceAudioPlay);
         document.addEventListener("keydown", forceAudioPlay);
 
         // --- 5. THE EASTER EGG (KEYLOGGER) ---
