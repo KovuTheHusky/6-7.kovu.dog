@@ -159,7 +159,7 @@
         // --- 1. INITIALIZE WEB AUDIO EFFECTS IMMEDIATELY ---
         function initAudioEffects() {
           const AudioContext = window.AudioContext || window.webkitAudioContext;
-          audioCtx = new AudioContext(); // May start in 'suspended' state, which is fine!
+          audioCtx = new AudioContext();
 
           const source = audioCtx.createMediaElementSource(memeAudio);
 
@@ -223,7 +223,6 @@
           noise.start();
         }
 
-        // Fire up the tape hiss and filters immediately on load
         initAudioEffects();
 
         function playTapePop() {
@@ -296,10 +295,8 @@
         // --- 3. THE AUDIO PLAYLIST ---
         const playlist = ["1.opus", "2.opus", "3.opus", "4.opus", "5.opus"];
 
-        // The Shuffle Algorithm (Fisher-Yates)
         for (let i = playlist.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
-          // Swap the elements
           [playlist[i], playlist[j]] = [playlist[j], playlist[i]];
         }
 
@@ -318,9 +315,6 @@
         });
 
         // --- 4. AUTOPLAY & INTERACTION FALLBACK ---
-
-        // Try to play immediately. If the browser suspends the audioCtx,
-        // the video runs but remains silently playing in the background until clicked.
         memeAudio
           .play()
           .then(() => {
@@ -337,13 +331,28 @@
           );
 
         const forceAudioPlay = () => {
-          // Wake up the audio filters and hiss if they were blocked
+          // Wake up the audio filters
           if (audioCtx && audioCtx.state === "suspended") {
             audioCtx.resume();
           }
-
-          // Double check the audio file is playing
           memeAudio.play().catch((e) => console.error("Still blocked:", e));
+
+          // Ask iOS for accelerometer permissions (Android ignores this and falls to the 'else')
+          if (
+            typeof DeviceMotionEvent !== "undefined" &&
+            typeof DeviceMotionEvent.requestPermission === "function"
+          ) {
+            DeviceMotionEvent.requestPermission()
+              .then((response) => {
+                if (response === "granted") {
+                  window.addEventListener("devicemotion", handleShake);
+                }
+              })
+              .catch(console.error);
+          } else {
+            // Non-iOS devices just start listening
+            window.addEventListener("devicemotion", handleShake);
+          }
 
           // Clean up listeners
           document.removeEventListener("click", forceAudioPlay);
@@ -351,7 +360,6 @@
           document.removeEventListener("keydown", forceAudioPlay);
         };
 
-        // Attach the fallback listeners
         document.addEventListener("click", forceAudioPlay);
         document.addEventListener("touchstart", forceAudioPlay);
         document.addEventListener("keydown", forceAudioPlay);
@@ -361,22 +369,53 @@
         const secretCode = "BALLS";
 
         document.addEventListener("keydown", (e) => {
-          // Ignore modifier keys and ensure we're only grabbing single characters
           if (e.key.length === 1) {
-            // Add the new key to the string and make it uppercase
             keyBuffer += e.key.toUpperCase();
-
-            // Keep the string trimmed to the length of our secret code to save memory
             if (keyBuffer.length > secretCode.length) {
               keyBuffer = keyBuffer.slice(-secretCode.length);
             }
-
-            // Check if it matches!
             if (keyBuffer === secretCode) {
               document.getElementById("meme-gif").src = "balls.gif";
             }
           }
         });
+
+        // --- 6. THE MOBILE SHAKE EASTER EGG ---
+        let lastUpdate = 0;
+        let lastX = null,
+          lastY = null,
+          lastZ = null;
+        const SHAKE_THRESHOLD = 800; // Increase this if it triggers too easily
+
+        function handleShake(event) {
+          const current = event.accelerationIncludingGravity;
+          if (!current) return;
+
+          let currentTime = Date.now();
+          let timeDifference = currentTime - lastUpdate;
+
+          // Check movement every 100ms
+          if (timeDifference > 100) {
+            if (lastX !== null) {
+              // Calculate speed of phone movement
+              let speed =
+                (Math.abs(
+                  current.x + current.y + current.z - lastX - lastY - lastZ,
+                ) /
+                  timeDifference) *
+                10000;
+
+              if (speed > SHAKE_THRESHOLD) {
+                document.getElementById("meme-gif").src = "balls.gif";
+              }
+            }
+
+            lastX = current.x;
+            lastY = current.y;
+            lastZ = current.z;
+            lastUpdate = currentTime;
+          }
+        }
       });
     </script>
   </body>
