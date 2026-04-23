@@ -6,7 +6,6 @@
     <title>6️⃣7️⃣</title>
     <link rel="icon" href="https://kovu.dog/favicon.webp" />
     <style>
-      /* --- ALL CSS REMAINS EXACTLY THE SAME --- */
       body,
       html {
         margin: 0;
@@ -139,9 +138,23 @@
         opacity: 0.8;
         border-radius: 40%;
       }
+
+      /* --- THE INVISIBLE INTERACTION BUTTON --- */
+      #interaction-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 9999; /* Sits above everything */
+        background: transparent;
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
+    <div id="interaction-overlay"></div>
+
     <audio id="meme-audio" crossorigin="anonymous"></audio>
 
     <div id="chaos-container"></div>
@@ -153,6 +166,9 @@
       document.addEventListener("DOMContentLoaded", () => {
         const memeAudio = document.getElementById("meme-audio");
         const chaosContainer = document.getElementById("chaos-container");
+        const interactionOverlay = document.getElementById(
+          "interaction-overlay",
+        );
 
         let audioCtx;
 
@@ -324,6 +340,8 @@
               );
             } else {
               console.log("Full VHS autoplay successful!");
+              // If autoplay works immediately with full audio context (rare), we can safely remove the overlay
+              interactionOverlay.remove();
             }
           })
           .catch((e) =>
@@ -337,7 +355,7 @@
           }
           memeAudio.play().catch((e) => console.error("Still blocked:", e));
 
-          // Ask iOS for accelerometer permissions (Android ignores this and falls to the 'else')
+          // Ask iOS for accelerometer permissions
           if (
             typeof DeviceMotionEvent !== "undefined" &&
             typeof DeviceMotionEvent.requestPermission === "function"
@@ -354,14 +372,16 @@
             window.addEventListener("devicemotion", handleShake);
           }
 
-          // Clean up listeners
-          document.removeEventListener("click", forceAudioPlay);
-          document.removeEventListener("touchstart", forceAudioPlay);
+          // Delete the overlay so it's gone forever
+          interactionOverlay.remove();
           document.removeEventListener("keydown", forceAudioPlay);
         };
 
-        document.addEventListener("click", forceAudioPlay);
-        document.addEventListener("touchstart", forceAudioPlay);
+        // Attach listeners to the invisible button instead of the document
+        interactionOverlay.addEventListener("click", forceAudioPlay);
+        interactionOverlay.addEventListener("touchstart", forceAudioPlay);
+
+        // Keep keydown on document in case someone starts typing BALLS before clicking
         document.addEventListener("keydown", forceAudioPlay);
 
         // --- 5. THE EASTER EGG (KEYLOGGER) ---
@@ -385,7 +405,7 @@
         let lastX = null,
           lastY = null,
           lastZ = null;
-        const SHAKE_THRESHOLD = 800; // Increase this if it triggers too easily
+        const SHAKE_THRESHOLD = 800;
 
         function handleShake(event) {
           const current = event.accelerationIncludingGravity;
@@ -394,10 +414,8 @@
           let currentTime = Date.now();
           let timeDifference = currentTime - lastUpdate;
 
-          // Check movement every 100ms
           if (timeDifference > 100) {
             if (lastX !== null) {
-              // Calculate speed of phone movement
               let speed =
                 (Math.abs(
                   current.x + current.y + current.z - lastX - lastY - lastZ,
