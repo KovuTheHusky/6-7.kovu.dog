@@ -1,295 +1,383 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>6️⃣7️⃣</title>
     <link rel="icon" href="https://kovu.dog/favicon.webp" />
     <style>
-        /* --- ALL CSS REMAINS EXACTLY THE SAME --- */
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: #050505; display: flex;
-            justify-content: center; align-items: center; overflow: hidden;
-            animation: cinematicFlicker 4s infinite alternate;
-        }
+      /* --- ALL CSS REMAINS EXACTLY THE SAME --- */
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #050505;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        animation: cinematicFlicker 4s infinite alternate;
+      }
 
-        @keyframes cinematicFlicker {
-            0% { opacity: 0.97; } 100% { opacity: 1; }
+      @keyframes cinematicFlicker {
+        0% {
+          opacity: 0.97;
         }
+        100% {
+          opacity: 1;
+        }
+      }
 
-        #meme-gif {
-            width: 100vmin; height: 100vmin; aspect-ratio: 1 / 1;
-            object-fit: cover; z-index: 1;
-            filter: contrast(1.05) brightness(0.95) saturate(0.85) sepia(0.15) hue-rotate(-5deg);
-        }
+      #meme-gif {
+        width: 100vmin;
+        height: 100vmin;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        z-index: 1;
+        filter: contrast(1.05) brightness(0.95) saturate(0.85) sepia(0.15)
+          hue-rotate(-5deg);
+      }
 
-        .vhs-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            pointer-events: none; z-index: 10;
-            box-shadow: inset 0 0 120px rgba(0,0,0,0.8);
-        }
+      .vhs-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 10;
+        box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.8);
+      }
 
-        .vhs-overlay::before {
-            content: " "; display: block; position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: 
-                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
-                linear-gradient(90deg, rgba(255, 0, 0, 0.03) 0%, rgba(0, 255, 0, 0.01) 50%, rgba(0, 0, 255, 0.03) 100%),
-                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
-            background-size: 150px 150px, 100% 100%, 100% 4px;
-            opacity: 0.6; z-index: 11;
-            animation: grainShift 0.08s infinite steps(2);
-        }
+      .vhs-overlay::before {
+        content: " ";
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background:
+          url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
+          linear-gradient(
+            90deg,
+            rgba(255, 0, 0, 0.03) 0%,
+            rgba(0, 255, 0, 0.01) 50%,
+            rgba(0, 0, 255, 0.03) 100%
+          ),
+          linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+        background-size:
+          150px 150px,
+          100% 100%,
+          100% 4px;
+        opacity: 0.6;
+        z-index: 11;
+        animation: grainShift 0.08s infinite steps(2);
+      }
 
-        @keyframes grainShift {
-            0% { background-position: 0 0, 0 0, 0 0; }
-            50% { background-position: 25px 25px, 0 0, 0 0; }
-            100% { background-position: -25px -25px, 0 0, 0 0; }
+      @keyframes grainShift {
+        0% {
+          background-position:
+            0 0,
+            0 0,
+            0 0;
         }
+        50% {
+          background-position:
+            25px 25px,
+            0 0,
+            0 0;
+        }
+        100% {
+          background-position:
+            -25px -25px,
+            0 0,
+            0 0;
+        }
+      }
 
-        .vhs-overlay::after {
-            content: " "; display: block; position: absolute;
-            top: 0; left: 0; width: 100vw; height: 25vh; 
-            background: rgba(255, 255, 255, 0.01); z-index: 12;
-            backdrop-filter: blur(1.5px) brightness(1.05);
-            -webkit-backdrop-filter: blur(1.5px) brightness(1.05);
-            animation: slowRoll 12s linear infinite;
-        }
+      .vhs-overlay::after {
+        content: " ";
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 25vh;
+        background: rgba(255, 255, 255, 0.01);
+        z-index: 12;
+        backdrop-filter: blur(1.5px) brightness(1.05);
+        -webkit-backdrop-filter: blur(1.5px) brightness(1.05);
+        animation: slowRoll 12s linear infinite;
+      }
 
-        @keyframes slowRoll {
-            0% { transform: translateY(-30vh); }
-            100% { transform: translateY(130vh); }
+      @keyframes slowRoll {
+        0% {
+          transform: translateY(-30vh);
         }
+        100% {
+          transform: translateY(130vh);
+        }
+      }
 
-        #chaos-container {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            pointer-events: none; z-index: 15; overflow: hidden;
-        }
+      #chaos-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 15;
+        overflow: hidden;
+      }
 
-        .tape-spot {
-            position: absolute; background-color: #000;
-            opacity: 0.8; border-radius: 40%;
-        }
+      .tape-spot {
+        position: absolute;
+        background-color: #000;
+        opacity: 0.8;
+        border-radius: 40%;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <audio id="meme-audio" crossorigin="anonymous"></audio>
 
     <div id="chaos-container"></div>
     <div class="vhs-overlay"></div>
 
-    <img id="meme-gif" src="6-7.gif" alt="Meme">
+    <img id="meme-gif" src="6-7.gif" alt="Meme" />
 
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const memeAudio = document.getElementById('meme-audio');
-            const chaosContainer = document.getElementById('chaos-container');
-            
-            let audioCtx;
+      document.addEventListener("DOMContentLoaded", () => {
+        const memeAudio = document.getElementById("meme-audio");
+        const chaosContainer = document.getElementById("chaos-container");
 
-            // --- 1. INITIALIZE WEB AUDIO EFFECTS IMMEDIATELY ---
-            function initAudioEffects() {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AudioContext(); // May start in 'suspended' state, which is fine!
+        let audioCtx;
 
-                const source = audioCtx.createMediaElementSource(memeAudio);
+        // --- 1. INITIALIZE WEB AUDIO EFFECTS IMMEDIATELY ---
+        function initAudioEffects() {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContext(); // May start in 'suspended' state, which is fine!
 
-                const lowpass = audioCtx.createBiquadFilter();
-                lowpass.type = 'lowpass';
-                lowpass.frequency.value = 3500; 
+          const source = audioCtx.createMediaElementSource(memeAudio);
 
-                const highpass = audioCtx.createBiquadFilter();
-                highpass.type = 'highpass';
-                highpass.frequency.value = 350; 
+          const lowpass = audioCtx.createBiquadFilter();
+          lowpass.type = "lowpass";
+          lowpass.frequency.value = 3500;
 
-                const distortion = audioCtx.createWaveShaper();
-                function makeDistortionCurve(amount) {
-                    let k = typeof amount === 'number' ? amount : 50,
-                        n_samples = 44100, curve = new Float32Array(n_samples),
-                        deg = Math.PI / 180, i = 0, x;
-                    for ( ; i < n_samples; ++i ) {
-                        x = i * 2 / n_samples - 1;
-                        curve[i] = ( 3 + k ) * x * 20 * deg / ( Math.PI + k * Math.abs(x) );
-                    }
-                    return curve;
-                }
-                distortion.curve = makeDistortionCurve(5); 
-                
-                const masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.8;
+          const highpass = audioCtx.createBiquadFilter();
+          highpass.type = "highpass";
+          highpass.frequency.value = 350;
 
-                source.connect(highpass);
-                highpass.connect(lowpass);
-                lowpass.connect(distortion);
-                distortion.connect(masterGain);
-                masterGain.connect(audioCtx.destination);
+          const distortion = audioCtx.createWaveShaper();
+          function makeDistortionCurve(amount) {
+            let k = typeof amount === "number" ? amount : 50,
+              n_samples = 44100,
+              curve = new Float32Array(n_samples),
+              deg = Math.PI / 180,
+              i = 0,
+              x;
+            for (; i < n_samples; ++i) {
+              x = (i * 2) / n_samples - 1;
+              curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+            }
+            return curve;
+          }
+          distortion.curve = makeDistortionCurve(5);
 
-                const bufferSize = audioCtx.sampleRate * 2;
-                const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-                const output = noiseBuffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) {
-                    output[i] = Math.random() * 2 - 1; 
-                }
-                const noise = audioCtx.createBufferSource();
-                noise.buffer = noiseBuffer;
-                noise.loop = true;
+          const masterGain = audioCtx.createGain();
+          masterGain.gain.value = 0.8;
 
-                const noiseFilter = audioCtx.createBiquadFilter();
-                noiseFilter.type = 'lowpass';
-                noiseFilter.frequency.value = 4000;
-                
-                const noiseGain = audioCtx.createGain();
-                noiseGain.gain.value = 0.02; 
+          source.connect(highpass);
+          highpass.connect(lowpass);
+          lowpass.connect(distortion);
+          distortion.connect(masterGain);
+          masterGain.connect(audioCtx.destination);
 
-                noise.connect(noiseFilter);
-                noiseFilter.connect(noiseGain);
-                noiseGain.connect(audioCtx.destination);
-                noise.start();
+          const bufferSize = audioCtx.sampleRate * 2;
+          const noiseBuffer = audioCtx.createBuffer(
+            1,
+            bufferSize,
+            audioCtx.sampleRate,
+          );
+          const output = noiseBuffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+          }
+          const noise = audioCtx.createBufferSource();
+          noise.buffer = noiseBuffer;
+          noise.loop = true;
+
+          const noiseFilter = audioCtx.createBiquadFilter();
+          noiseFilter.type = "lowpass";
+          noiseFilter.frequency.value = 4000;
+
+          const noiseGain = audioCtx.createGain();
+          noiseGain.gain.value = 0.02;
+
+          noise.connect(noiseFilter);
+          noiseFilter.connect(noiseGain);
+          noiseGain.connect(audioCtx.destination);
+          noise.start();
+        }
+
+        // Fire up the tape hiss and filters immediately on load
+        initAudioEffects();
+
+        function playTapePop() {
+          if (!audioCtx || audioCtx.state === "suspended") return;
+          const popOsc = audioCtx.createOscillator();
+          const popGain = audioCtx.createGain();
+
+          popOsc.type = "sine";
+          popOsc.frequency.setValueAtTime(100, audioCtx.currentTime);
+          popOsc.frequency.exponentialRampToValueAtTime(
+            10,
+            audioCtx.currentTime + 0.05,
+          );
+
+          popGain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+          popGain.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioCtx.currentTime + 0.05,
+          );
+
+          popOsc.connect(popGain);
+          popGain.connect(audioCtx.destination);
+
+          popOsc.start();
+          popOsc.stop(audioCtx.currentTime + 0.05);
+        }
+
+        // --- 2. THE VISUAL CHAOS ENGINE ---
+        function spawnArtifact() {
+          if (Math.random() < 0.3) {
+            const spot = document.createElement("div");
+            spot.classList.add("tape-spot");
+
+            const isLargeDropout = Math.random() < 0.05;
+            const width = isLargeDropout
+              ? Math.random() * 100 + 50
+              : Math.random() * 15 + 2;
+            const height = isLargeDropout
+              ? Math.random() * 15 + 2
+              : Math.random() * 10 + 2;
+
+            spot.style.width = `${width}px`;
+            spot.style.height = `${height}px`;
+            spot.style.left = `${Math.random() * 100}vw`;
+            spot.style.top = `${Math.random() * 100}vh`;
+
+            if (Math.random() < 0.15) {
+              spot.style.backgroundColor = "rgba(255, 255, 255, 0.7)";
+            } else {
+              spot.style.backgroundColor = `rgba(0, 0, 0, ${Math.random() * 0.5 + 0.4})`;
             }
 
-            // Fire up the tape hiss and filters immediately on load
-            initAudioEffects();
+            chaosContainer.appendChild(spot);
 
-            function playTapePop() {
-                if (!audioCtx || audioCtx.state === 'suspended') return;
-                const popOsc = audioCtx.createOscillator();
-                const popGain = audioCtx.createGain();
-                
-                popOsc.type = 'sine';
-                popOsc.frequency.setValueAtTime(100, audioCtx.currentTime);
-                popOsc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.05);
-                
-                popGain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-                popGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
-                
-                popOsc.connect(popGain);
-                popGain.connect(audioCtx.destination);
-                
-                popOsc.start();
-                popOsc.stop(audioCtx.currentTime + 0.05);
+            if (isLargeDropout) {
+              playTapePop();
             }
 
-            // --- 2. THE VISUAL CHAOS ENGINE ---
-            function spawnArtifact() {
-                if (Math.random() < 0.3) {
-                    const spot = document.createElement('div');
-                    spot.classList.add('tape-spot');
+            setTimeout(
+              () => {
+                spot.remove();
+              },
+              Math.random() * 120 + 30,
+            );
+          }
+        }
 
-                    const isLargeDropout = Math.random() < 0.05; 
-                    const width = isLargeDropout ? (Math.random() * 100 + 50) : (Math.random() * 15 + 2);
-                    const height = isLargeDropout ? (Math.random() * 15 + 2) : (Math.random() * 10 + 2);
-                    
-                    spot.style.width = `${width}px`;
-                    spot.style.height = `${height}px`;
-                    spot.style.left = `${Math.random() * 100}vw`;
-                    spot.style.top = `${Math.random() * 100}vh`;
+        setInterval(spawnArtifact, 50);
 
-                    if (Math.random() < 0.15) {
-                        spot.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
-                    } else {
-                        spot.style.backgroundColor = `rgba(0, 0, 0, ${Math.random() * 0.5 + 0.4})`;
-                    }
+        // --- 3. THE AUDIO PLAYLIST ---
+        const playlist = ["1.opus", "2.opus", "3.opus", "4.opus", "5.opus"];
 
-                    chaosContainer.appendChild(spot);
+        // The Shuffle Algorithm (Fisher-Yates)
+        for (let i = playlist.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          // Swap the elements
+          [playlist[i], playlist[j]] = [playlist[j], playlist[i]];
+        }
 
-                    if (isLargeDropout) {
-                        playTapePop();
-                    }
+        let currentTrack = 0;
+        memeAudio.src = playlist[currentTrack];
 
-                    setTimeout(() => {
-                        spot.remove();
-                    }, Math.random() * 120 + 30);
-                }
-            }
-
-            setInterval(spawnArtifact, 50);
-
-
-            // --- 3. THE AUDIO PLAYLIST ---
-            const playlist = [
-                '1.opus',
-                '2.opus',
-                '3.opus',
-                '4.opus',
-                '5.opus'
-            ];
-            
-            // The Shuffle Algorithm (Fisher-Yates)
-            for (let i = playlist.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                // Swap the elements
-                [playlist[i], playlist[j]] = [playlist[j], playlist[i]];
-            }
-            
-            let currentTrack = 0;
-            memeAudio.src = playlist[currentTrack];
-
-            memeAudio.addEventListener('ended', () => {
-                currentTrack++;
-                if (currentTrack >= playlist.length) {
-                    currentTrack = 0; 
-                }
-                memeAudio.src = playlist[currentTrack];
-                memeAudio.play().catch(e => console.error("Playlist playback failed:", e));
-            });
-
-            // --- 4. AUTOPLAY & INTERACTION FALLBACK ---
-            
-            // Try to play immediately. If the browser suspends the audioCtx, 
-            // the video runs but remains silently playing in the background until clicked.
-            memeAudio.play().then(() => {
-                if (audioCtx.state === 'suspended') {
-                    console.log("Audio playing, but Web Audio API suspended. Waiting for click to unmute.");
-                } else {
-                    console.log("Full VHS autoplay successful!");
-                }
-            }).catch(e => console.log("Autoplay entirely blocked. Waiting for click."));
-
-            const forceAudioPlay = () => {
-                // Wake up the audio filters and hiss if they were blocked
-                if (audioCtx && audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                
-                // Double check the audio file is playing
-                memeAudio.play().catch(e => console.error("Still blocked:", e));
-                
-                // Clean up listeners
-                document.removeEventListener('click', forceAudioPlay);
-                document.removeEventListener('touchstart', forceAudioPlay);
-                document.removeEventListener('keydown', forceAudioPlay);
-            };
-
-            // Attach the fallback listeners
-            document.addEventListener('click', forceAudioPlay);
-            document.addEventListener('touchstart', forceAudioPlay);
-            document.addEventListener('keydown', forceAudioPlay);
-
-
-            // --- 5. THE EASTER EGG (KEYLOGGER) ---
-            let keyBuffer = '';
-            const secretCode = 'BALLS';
-
-            document.addEventListener('keydown', (e) => {
-                // Ignore modifier keys and ensure we're only grabbing single characters
-                if (e.key.length === 1) {
-                    // Add the new key to the string and make it uppercase
-                    keyBuffer += e.key.toUpperCase();
-                    
-                    // Keep the string trimmed to the length of our secret code to save memory
-                    if (keyBuffer.length > secretCode.length) {
-                        keyBuffer = keyBuffer.slice(-secretCode.length);
-                    }
-                    
-                    // Check if it matches!
-                    if (keyBuffer === secretCode) {
-                        document.getElementById('meme-gif').src = 'balls.gif';
-                    }
-                }
-            });
+        memeAudio.addEventListener("ended", () => {
+          currentTrack++;
+          if (currentTrack >= playlist.length) {
+            currentTrack = 0;
+          }
+          memeAudio.src = playlist[currentTrack];
+          memeAudio
+            .play()
+            .catch((e) => console.error("Playlist playback failed:", e));
         });
+
+        // --- 4. AUTOPLAY & INTERACTION FALLBACK ---
+
+        // Try to play immediately. If the browser suspends the audioCtx,
+        // the video runs but remains silently playing in the background until clicked.
+        memeAudio
+          .play()
+          .then(() => {
+            if (audioCtx.state === "suspended") {
+              console.log(
+                "Audio playing, but Web Audio API suspended. Waiting for click to unmute.",
+              );
+            } else {
+              console.log("Full VHS autoplay successful!");
+            }
+          })
+          .catch((e) =>
+            console.log("Autoplay entirely blocked. Waiting for click."),
+          );
+
+        const forceAudioPlay = () => {
+          // Wake up the audio filters and hiss if they were blocked
+          if (audioCtx && audioCtx.state === "suspended") {
+            audioCtx.resume();
+          }
+
+          // Double check the audio file is playing
+          memeAudio.play().catch((e) => console.error("Still blocked:", e));
+
+          // Clean up listeners
+          document.removeEventListener("click", forceAudioPlay);
+          document.removeEventListener("touchstart", forceAudioPlay);
+          document.removeEventListener("keydown", forceAudioPlay);
+        };
+
+        // Attach the fallback listeners
+        document.addEventListener("click", forceAudioPlay);
+        document.addEventListener("touchstart", forceAudioPlay);
+        document.addEventListener("keydown", forceAudioPlay);
+
+        // --- 5. THE EASTER EGG (KEYLOGGER) ---
+        let keyBuffer = "";
+        const secretCode = "BALLS";
+
+        document.addEventListener("keydown", (e) => {
+          // Ignore modifier keys and ensure we're only grabbing single characters
+          if (e.key.length === 1) {
+            // Add the new key to the string and make it uppercase
+            keyBuffer += e.key.toUpperCase();
+
+            // Keep the string trimmed to the length of our secret code to save memory
+            if (keyBuffer.length > secretCode.length) {
+              keyBuffer = keyBuffer.slice(-secretCode.length);
+            }
+
+            // Check if it matches!
+            if (keyBuffer === secretCode) {
+              document.getElementById("meme-gif").src = "balls.gif";
+            }
+          }
+        });
+      });
     </script>
-</body>
+  </body>
 </html>
