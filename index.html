@@ -365,23 +365,6 @@
           }
           memeAudio.play().catch((e) => console.error("Still blocked:", e));
 
-          // Ask iOS for accelerometer permissions
-          if (
-            typeof DeviceMotionEvent !== "undefined" &&
-            typeof DeviceMotionEvent.requestPermission === "function"
-          ) {
-            DeviceMotionEvent.requestPermission()
-              .then((response) => {
-                if (response === "granted") {
-                  window.addEventListener("devicemotion", handleShake);
-                }
-              })
-              .catch(console.error);
-          } else {
-            // Non-iOS devices
-            window.addEventListener("devicemotion", handleShake);
-          }
-
           // Destroy the overlay so it's gone forever
           if (document.body.contains(interactionOverlay)) {
             interactionOverlay.remove();
@@ -408,41 +391,6 @@
             }
           }
         });
-
-        // --- 6. THE MOBILE SHAKE EASTER EGG ---
-        let lastUpdate = 0;
-        let lastX = null,
-          lastY = null,
-          lastZ = null;
-        const SHAKE_THRESHOLD = 800;
-
-        function handleShake(event) {
-          const current = event.accelerationIncludingGravity;
-          if (!current) return;
-
-          let currentTime = Date.now();
-          let timeDifference = currentTime - lastUpdate;
-
-          if (timeDifference > 100) {
-            if (lastX !== null) {
-              let speed =
-                (Math.abs(
-                  current.x + current.y + current.z - lastX - lastY - lastZ,
-                ) /
-                  timeDifference) *
-                10000;
-
-              if (speed > SHAKE_THRESHOLD) {
-                document.getElementById("meme-gif").src = "balls.gif";
-              }
-            }
-
-            lastX = current.x;
-            lastY = current.y;
-            lastZ = current.z;
-            lastUpdate = currentTime;
-          }
-        }
       });
     </script>
   </body>
