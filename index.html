@@ -6,7 +6,6 @@
     <title>&#54;&#65039;&#8419;&#55;&#65039;&#8419;</title>
     <link rel="icon" href="https://kovu.dog/favicon.webp" />
     <style>
-      /* --- ALL CSS REMAINS EXACTLY THE SAME --- */
       body,
       html {
         margin: 0;
@@ -36,6 +35,8 @@
         aspect-ratio: 1 / 1;
         object-fit: cover;
         z-index: 1;
+        /* Using transform here ensures GPU acceleration if the image moves */
+        will-change: transform, filter;
         filter: contrast(1.05) brightness(0.95) saturate(0.85) sepia(0.15)
           hue-rotate(-5deg);
       }
@@ -51,14 +52,16 @@
         box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.8);
       }
 
+      /* --- OPTIMIZATION 1: The Grain Shift --- */
       .vhs-overlay::before {
         content: " ";
         display: block;
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        /* Make the layer 200% size so we can shift it without exposing edges */
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
         background:
           url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
           linear-gradient(
@@ -74,30 +77,26 @@
           100% 4px;
         opacity: 0.6;
         z-index: 11;
+
+        /* Tell the browser to prioritize this animation on the GPU */
+        will-change: transform;
         animation: grainShift 0.08s infinite steps(2);
       }
 
+      /* Use transform instead of background-position to stop page repaints */
       @keyframes grainShift {
         0% {
-          background-position:
-            0 0,
-            0 0,
-            0 0;
+          transform: translate(0, 0);
         }
         50% {
-          background-position:
-            25px 25px,
-            0 0,
-            0 0;
+          transform: translate(25px, 25px);
         }
         100% {
-          background-position:
-            -25px -25px,
-            0 0,
-            0 0;
+          transform: translate(-25px, -25px);
         }
       }
 
+      /* --- OPTIMIZATION 2: The Tracking Band --- */
       .vhs-overlay::after {
         content: " ";
         display: block;
@@ -106,10 +105,17 @@
         left: 0;
         width: 100vw;
         height: 25vh;
-        background: rgba(255, 255, 255, 0.01);
+
+        /* Replaced expensive backdrop-filter with a cheap gradient wash */
+        background: linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.04) 50%,
+          rgba(255, 255, 255, 0) 100%
+        );
         z-index: 12;
-        backdrop-filter: blur(1.5px) brightness(1.05);
-        -webkit-backdrop-filter: blur(1.5px) brightness(1.05);
+
+        will-change: transform;
         animation: slowRoll 12s linear infinite;
       }
 
@@ -135,12 +141,14 @@
 
       .tape-spot {
         position: absolute;
+        top: 0;
+        left: 0; /* Base position for our hardware-accelerated translation */
         background-color: #000;
         opacity: 0.8;
         border-radius: 40%;
+        will-change: transform, opacity;
       }
 
-      /* The invisible button */
       #interaction-overlay {
         position: fixed;
         top: 0;
@@ -174,12 +182,11 @@
         let audioCtx;
         let isAudioInitialized = false;
 
-        // --- 1. INITIALIZE WEB AUDIO EFFECTS IMMEDIATELY ---
         function initAudioEffects() {
           if (isAudioInitialized) return;
 
           const AudioContext = window.AudioContext || window.webkitAudioContext;
-          audioCtx = new AudioContext(); // Starts suspended if autoplay is blocked
+          audioCtx = new AudioContext();
 
           const source = audioCtx.createMediaElementSource(memeAudio);
 
@@ -210,7 +217,6 @@
           const masterGain = audioCtx.createGain();
           masterGain.gain.value = 0.8;
 
-          // Route audio through filters. If audioCtx is suspended, output is silent!
           source.connect(highpass);
           highpass.connect(lowpass);
           lowpass.connect(distortion);
@@ -246,7 +252,6 @@
           isAudioInitialized = true;
         }
 
-        // Immediately build the filters
         initAudioEffects();
 
         function playTapePop() {
@@ -274,11 +279,28 @@
           popOsc.stop(audioCtx.currentTime + 0.05);
         }
 
-        // --- 2. THE VISUAL CHAOS ENGINE ---
+        // --- OPTIMIZATION 3: Object Pooling for the Chaos Engine ---
+
+        // Pre-create 5 invisible elements so we never have to touch the DOM again
+        const spotPool = [];
+        for (let i = 0; i < 5; i++) {
+          const spot = document.createElement("div");
+          spot.classList.add("tape-spot");
+          spot.style.display = "none";
+          chaosContainer.appendChild(spot);
+          spotPool.push({ el: spot, active: false });
+        }
+
         function spawnArtifact() {
-          if (Math.random() < 0.3) {
-            const spot = document.createElement("div");
-            spot.classList.add("tape-spot");
+          if (Math.random() < 0.25) {
+            // Slightly lowered chance to reduce load
+
+            // Find an inactive spot in our pool
+            const availableSpot = spotPool.find((s) => !s.active);
+            if (!availableSpot) return; // If all 5 are on screen, skip this frame
+
+            availableSpot.active = true;
+            const spot = availableSpot.el;
 
             const isLargeDropout = Math.random() < 0.05;
             const width = isLargeDropout
@@ -290,8 +312,9 @@
 
             spot.style.width = `${width}px`;
             spot.style.height = `${height}px`;
-            spot.style.left = `${Math.random() * 100}vw`;
-            spot.style.top = `${Math.random() * 100}vh`;
+
+            // Use transform translate instead of left/top for performance
+            spot.style.transform = `translate(${Math.random() * 100}vw, ${Math.random() * 100}vh)`;
 
             if (Math.random() < 0.15) {
               spot.style.backgroundColor = "rgba(255, 255, 255, 0.7)";
@@ -299,7 +322,7 @@
               spot.style.backgroundColor = `rgba(0, 0, 0, ${Math.random() * 0.5 + 0.4})`;
             }
 
-            chaosContainer.appendChild(spot);
+            spot.style.display = "block";
 
             if (isLargeDropout) {
               playTapePop();
@@ -307,16 +330,18 @@
 
             setTimeout(
               () => {
-                spot.remove();
+                spot.style.display = "none";
+                availableSpot.active = false;
               },
               Math.random() * 120 + 30,
             );
           }
         }
 
-        setInterval(spawnArtifact, 50);
+        // Increased interval from 50ms to 80ms (Approx 12 FPS check, plenty for chaotic glitches)
+        setInterval(spawnArtifact, 80);
 
-        // --- 3. THE AUDIO PLAYLIST (USING MP3) ---
+        // --- 3. THE AUDIO PLAYLIST ---
         const playlist = ["1.mp3", "2.mp3", "3.mp3", "4.mp3", "5.mp3"];
 
         for (let i = playlist.length - 1; i > 0; i--) {
@@ -343,12 +368,9 @@
           .play()
           .then(() => {
             if (audioCtx.state === "running") {
-              // It worked immediately! We can safely delete the invisible button.
               console.log("Full VHS autoplay successful!");
               interactionOverlay.remove();
             } else {
-              // The audio is technically playing, but WebAudio is suspended (Silent).
-              // We keep the overlay so the user can tap to resume the audioCtx.
               console.log(
                 "Audio playing silently. Waiting for tap to resume VHS filters.",
               );
@@ -359,13 +381,11 @@
           );
 
         const forceAudioPlay = () => {
-          // Wake up the audio filters
           if (audioCtx && audioCtx.state === "suspended") {
             audioCtx.resume();
           }
           memeAudio.play().catch((e) => console.error("Still blocked:", e));
 
-          // Destroy the overlay so it's gone forever
           if (document.body.contains(interactionOverlay)) {
             interactionOverlay.remove();
           }
