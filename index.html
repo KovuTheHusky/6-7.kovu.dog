@@ -12,18 +12,22 @@
         padding: 0;
         width: 100%;
         height: 100%;
-        background-color: #050505;
+        background-color: #020202; /* Darker black */
         display: flex;
         justify-content: center;
         align-items: center;
         overflow: hidden;
-        animation: cinematicFlicker 4s infinite alternate;
+        animation: cinematicFlicker 3s infinite alternate; /* Faster flicker */
       }
 
       @keyframes cinematicFlicker {
-        0% {
-          opacity: 0.97;
+        0%,
+        90% {
+          opacity: 0.95;
         }
+        95% {
+          opacity: 0.8;
+        } /* Harsher dips in brightness */
         100% {
           opacity: 1;
         }
@@ -35,10 +39,38 @@
         aspect-ratio: 1 / 1;
         object-fit: cover;
         z-index: 1;
-        /* Using transform here ensures GPU acceleration if the image moves */
+        border-radius: 3%; /* Slight CRT curvature */
+
+        /* 1. TERRIBLE COLORS: High contrast, washed out, sickly green/yellow tint */
+        filter: contrast(1.4) brightness(0.85) saturate(0.5) sepia(0.5)
+          hue-rotate(-15deg);
+
         will-change: transform, filter;
-        filter: contrast(1.05) brightness(0.95) saturate(0.85) sepia(0.15)
-          hue-rotate(-5deg);
+        /* 2. V-HOLD JITTER: The tape randomly loses tracking and shakes */
+        animation: tapeJitter 4s infinite;
+      }
+
+      @keyframes tapeJitter {
+        0%,
+        93% {
+          transform: translate(0, 0) scale(1);
+        }
+        94% {
+          transform: translate(4px, -2px) scale(1.01);
+        }
+        95% {
+          transform: translate(-5px, 3px) scale(1.01);
+        }
+        96% {
+          transform: translate(3px, -4px) scale(1.01);
+        }
+        97% {
+          transform: translate(-2px, 1px) scale(1.01);
+        }
+        98%,
+        100% {
+          transform: translate(0, 0) scale(1);
+        }
       }
 
       .vhs-overlay {
@@ -49,41 +81,39 @@
         height: 100vh;
         pointer-events: none;
         z-index: 10;
-        box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.8);
+        box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.95); /* Heavier Vignette */
       }
 
-      /* --- OPTIMIZATION 1: The Grain Shift --- */
       .vhs-overlay::before {
         content: " ";
         display: block;
         position: absolute;
-        /* Make the layer 200% size so we can shift it without exposing edges */
         top: -50%;
         left: -50%;
         width: 200%;
         height: 200%;
         background:
           url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
+          /* Aggressive color bleed gradients (RGB split) */
           linear-gradient(
-            90deg,
-            rgba(255, 0, 0, 0.03) 0%,
-            rgba(0, 255, 0, 0.01) 50%,
-            rgba(0, 0, 255, 0.03) 100%
-          ),
-          linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+              90deg,
+              rgba(255, 0, 0, 0.05) 0%,
+              rgba(0, 255, 0, 0.02) 50%,
+              rgba(0, 0, 255, 0.05) 100%
+            ),
+          /* Thicker, harsher scanlines */
+          linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
         background-size:
           150px 150px,
           100% 100%,
-          100% 4px;
-        opacity: 0.6;
+          100% 6px; /* 6px instead of 4px for clunkier scanlines */
+        opacity: 0.7; /* Stronger grain */
         z-index: 11;
 
-        /* Tell the browser to prioritize this animation on the GPU */
         will-change: transform;
         animation: grainShift 0.08s infinite steps(2);
       }
 
-      /* Use transform instead of background-position to stop page repaints */
       @keyframes grainShift {
         0% {
           transform: translate(0, 0);
@@ -96,7 +126,6 @@
         }
       }
 
-      /* --- OPTIMIZATION 2: The Tracking Band --- */
       .vhs-overlay::after {
         content: " ";
         display: block;
@@ -104,19 +133,20 @@
         top: 0;
         left: 0;
         width: 100vw;
-        height: 25vh;
+        height: 12vh; /* Narrower for a sharper crease */
 
-        /* Replaced expensive backdrop-filter with a cheap gradient wash */
+        /* 3. MAGNETIC CREASE: Overlay mode bites into underlying colors, causing harsh bands */
         background: linear-gradient(
           to bottom,
           rgba(255, 255, 255, 0) 0%,
-          rgba(255, 255, 255, 0.04) 50%,
+          rgba(255, 255, 255, 0.15) 50%,
           rgba(255, 255, 255, 0) 100%
         );
+        mix-blend-mode: overlay;
         z-index: 12;
 
         will-change: transform;
-        animation: slowRoll 12s linear infinite;
+        animation: slowRoll 8s linear infinite; /* Rolls a bit faster */
       }
 
       @keyframes slowRoll {
@@ -142,10 +172,8 @@
       .tape-spot {
         position: absolute;
         top: 0;
-        left: 0; /* Base position for our hardware-accelerated translation */
-        background-color: #000;
-        opacity: 0.8;
-        border-radius: 40%;
+        left: 0;
+        background-color: #fff; /* Static white/grey */
         will-change: transform, opacity;
       }
 
@@ -190,9 +218,10 @@
 
           const source = audioCtx.createMediaElementSource(memeAudio);
 
+          // 4. WORSE AUDIO: Lower lowpass (muffled) and higher distortion
           const lowpass = audioCtx.createBiquadFilter();
           lowpass.type = "lowpass";
-          lowpass.frequency.value = 3500;
+          lowpass.frequency.value = 2500; /* Muffled further */
 
           const highpass = audioCtx.createBiquadFilter();
           highpass.type = "highpass";
@@ -212,7 +241,8 @@
             }
             return curve;
           }
-          distortion.curve = makeDistortionCurve(5);
+          // Cranked distortion from 5 to 25 for blown-out sound
+          distortion.curve = makeDistortionCurve(25);
 
           const masterGain = audioCtx.createGain();
           masterGain.gain.value = 0.8;
@@ -242,7 +272,7 @@
           noiseFilter.frequency.value = 4000;
 
           const noiseGain = audioCtx.createGain();
-          noiseGain.gain.value = 0.02;
+          noiseGain.gain.value = 0.025; /* Slightly louder hiss */
 
           noise.connect(noiseFilter);
           noiseFilter.connect(noiseGain);
@@ -259,14 +289,15 @@
           const popOsc = audioCtx.createOscillator();
           const popGain = audioCtx.createGain();
 
-          popOsc.type = "sine";
-          popOsc.frequency.setValueAtTime(100, audioCtx.currentTime);
+          // Lower, harsher pitch for the tape pop
+          popOsc.type = "square";
+          popOsc.frequency.setValueAtTime(80, audioCtx.currentTime);
           popOsc.frequency.exponentialRampToValueAtTime(
-            10,
+            5,
             audioCtx.currentTime + 0.05,
           );
 
-          popGain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+          popGain.gain.setValueAtTime(0.6, audioCtx.currentTime);
           popGain.gain.exponentialRampToValueAtTime(
             0.01,
             audioCtx.currentTime + 0.05,
@@ -279,9 +310,6 @@
           popOsc.stop(audioCtx.currentTime + 0.05);
         }
 
-        // --- OPTIMIZATION 3: Object Pooling for the Chaos Engine ---
-
-        // Pre-create 5 invisible elements so we never have to touch the DOM again
         const spotPool = [];
         for (let i = 0; i < 5; i++) {
           const spot = document.createElement("div");
@@ -293,33 +321,31 @@
 
         function spawnArtifact() {
           if (Math.random() < 0.25) {
-            // Slightly lowered chance to reduce load
-
-            // Find an inactive spot in our pool
             const availableSpot = spotPool.find((s) => !s.active);
-            if (!availableSpot) return; // If all 5 are on screen, skip this frame
+            if (!availableSpot) return;
 
             availableSpot.active = true;
             const spot = availableSpot.el;
 
+            // 5. HORIZONTAL TEARING: Analog dropouts are wide and thin, not circular
             const isLargeDropout = Math.random() < 0.05;
             const width = isLargeDropout
-              ? Math.random() * 100 + 50
-              : Math.random() * 15 + 2;
+              ? Math.random() * 80 + 20 + "vw" /* Very wide */
+              : Math.random() * 30 + 5 + "vw";
             const height = isLargeDropout
-              ? Math.random() * 15 + 2
-              : Math.random() * 10 + 2;
+              ? Math.random() * 6 + 2 + "px" /* Very thin */
+              : Math.random() * 3 + 1 + "px";
 
-            spot.style.width = `${width}px`;
-            spot.style.height = `${height}px`;
+            spot.style.width = width;
+            spot.style.height = height;
 
-            // Use transform translate instead of left/top for performance
             spot.style.transform = `translate(${Math.random() * 100}vw, ${Math.random() * 100}vh)`;
 
-            if (Math.random() < 0.15) {
-              spot.style.backgroundColor = "rgba(255, 255, 255, 0.7)";
+            // Mostly static white streaks, occasionally black tape wear
+            if (Math.random() < 0.7) {
+              spot.style.backgroundColor = `rgba(255, 255, 255, ${Math.random() * 0.4 + 0.2})`;
             } else {
-              spot.style.backgroundColor = `rgba(0, 0, 0, ${Math.random() * 0.5 + 0.4})`;
+              spot.style.backgroundColor = `rgba(0, 0, 0, ${Math.random() * 0.5 + 0.3})`;
             }
 
             spot.style.display = "block";
@@ -333,15 +359,13 @@
                 spot.style.display = "none";
                 availableSpot.active = false;
               },
-              Math.random() * 120 + 30,
+              Math.random() * 80 + 20 /* Shorter, snappier glitches */,
             );
           }
         }
 
-        // Increased interval from 50ms to 80ms (Approx 12 FPS check, plenty for chaotic glitches)
         setInterval(spawnArtifact, 80);
 
-        // --- 3. THE AUDIO PLAYLIST ---
         const playlist = ["1.mp3", "2.mp3", "3.mp3", "4.mp3", "5.mp3"];
 
         for (let i = playlist.length - 1; i > 0; i--) {
@@ -363,7 +387,6 @@
             .catch((e) => console.error("Playlist playback failed:", e));
         });
 
-        // --- 4. AUTOPLAY ATTEMPT & INTERACTION FALLBACK ---
         memeAudio
           .play()
           .then(() => {
@@ -396,7 +419,6 @@
         interactionOverlay.addEventListener("touchend", forceAudioPlay);
         document.addEventListener("keydown", forceAudioPlay);
 
-        // --- 5. THE EASTER EGG (KEYLOGGER) ---
         let keyBuffer = "";
         const secretCode = "BALLS";
 
