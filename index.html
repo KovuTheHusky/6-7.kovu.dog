@@ -12,12 +12,12 @@
         padding: 0;
         width: 100%;
         height: 100%;
-        background-color: #020202; /* Darker black */
+        background-color: #020202;
         display: flex;
         justify-content: center;
         align-items: center;
         overflow: hidden;
-        animation: cinematicFlicker 3s infinite alternate; /* Faster flicker */
+        animation: cinematicFlicker 3s infinite alternate;
       }
 
       @keyframes cinematicFlicker {
@@ -27,7 +27,7 @@
         }
         95% {
           opacity: 0.8;
-        } /* Harsher dips in brightness */
+        }
         100% {
           opacity: 1;
         }
@@ -39,14 +39,12 @@
         aspect-ratio: 1 / 1;
         object-fit: cover;
         z-index: 1;
-        border-radius: 3%; /* Slight CRT curvature */
+        border-radius: 3%;
 
-        /* 1. TERRIBLE COLORS: High contrast, washed out, sickly green/yellow tint */
         filter: contrast(1.4) brightness(0.85) saturate(0.5) sepia(0.5)
           hue-rotate(-15deg);
 
         will-change: transform, filter;
-        /* 2. V-HOLD JITTER: The tape randomly loses tracking and shakes */
         animation: tapeJitter 4s infinite;
       }
 
@@ -81,7 +79,7 @@
         height: 100vh;
         pointer-events: none;
         z-index: 10;
-        box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.95); /* Heavier Vignette */
+        box-shadow: inset 0 0 150px rgba(0, 0, 0, 0.95);
       }
 
       .vhs-overlay::before {
@@ -94,20 +92,18 @@
         height: 200%;
         background:
           url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"),
-          /* Aggressive color bleed gradients (RGB split) */
           linear-gradient(
-              90deg,
-              rgba(255, 0, 0, 0.05) 0%,
-              rgba(0, 255, 0, 0.02) 50%,
-              rgba(0, 0, 255, 0.05) 100%
-            ),
-          /* Thicker, harsher scanlines */
+            90deg,
+            rgba(255, 0, 0, 0.05) 0%,
+            rgba(0, 255, 0, 0.02) 50%,
+            rgba(0, 0, 255, 0.05) 100%
+          ),
           linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%);
         background-size:
           150px 150px,
           100% 100%,
-          100% 6px; /* 6px instead of 4px for clunkier scanlines */
-        opacity: 0.7; /* Stronger grain */
+          100% 6px;
+        opacity: 0.7;
         z-index: 11;
 
         will-change: transform;
@@ -133,9 +129,8 @@
         top: 0;
         left: 0;
         width: 100vw;
-        height: 12vh; /* Narrower for a sharper crease */
+        height: 12vh;
 
-        /* 3. MAGNETIC CREASE: Overlay mode bites into underlying colors, causing harsh bands */
         background: linear-gradient(
           to bottom,
           rgba(255, 255, 255, 0) 0%,
@@ -146,7 +141,7 @@
         z-index: 12;
 
         will-change: transform;
-        animation: slowRoll 8s linear infinite; /* Rolls a bit faster */
+        animation: slowRoll 8s linear infinite;
       }
 
       @keyframes slowRoll {
@@ -173,7 +168,7 @@
         position: absolute;
         top: 0;
         left: 0;
-        background-color: #fff; /* Static white/grey */
+        background-color: #fff;
         will-change: transform, opacity;
       }
 
@@ -218,10 +213,9 @@
 
           const source = audioCtx.createMediaElementSource(memeAudio);
 
-          // 4. WORSE AUDIO: Lower lowpass (muffled) and higher distortion
           const lowpass = audioCtx.createBiquadFilter();
           lowpass.type = "lowpass";
-          lowpass.frequency.value = 2500; /* Muffled further */
+          lowpass.frequency.value = 2500;
 
           const highpass = audioCtx.createBiquadFilter();
           highpass.type = "highpass";
@@ -241,16 +235,46 @@
             }
             return curve;
           }
-          // Cranked distortion from 5 to 25 for blown-out sound
           distortion.curve = makeDistortionCurve(25);
+
+          // --- THE WOW & FLUTTER ENGINE ---
+          const delay = audioCtx.createDelay();
+          delay.delayTime.value = 0.05; // Base delay buffer
+
+          // "Wow" (Slow tape stretching pitch bend)
+          const wowLfo = audioCtx.createOscillator();
+          wowLfo.type = "sine";
+          wowLfo.frequency.value = 0.5; // 0.5 Hz is a slow, seasick wobble
+
+          const wowGain = audioCtx.createGain();
+          wowGain.gain.value = 0.001; // Depth of the pitch bend
+
+          // "Flutter" (Fast, rattling tape capstan vibration)
+          const flutterLfo = audioCtx.createOscillator();
+          flutterLfo.type = "sine";
+          flutterLfo.frequency.value = 8; // 8 Hz fast rattle
+
+          const flutterGain = audioCtx.createGain();
+          flutterGain.gain.value = 0.0001; // Very subtle depth
+
+          wowLfo.connect(wowGain);
+          wowGain.connect(delay.delayTime);
+          wowLfo.start();
+
+          flutterLfo.connect(flutterGain);
+          flutterGain.connect(delay.delayTime);
+          flutterLfo.start();
+          // --------------------------------
 
           const masterGain = audioCtx.createGain();
           masterGain.gain.value = 0.8;
 
+          // Wire it up: Source -> Highpass -> Lowpass -> Distortion -> Wow/Flutter Delay -> Master
           source.connect(highpass);
           highpass.connect(lowpass);
           lowpass.connect(distortion);
-          distortion.connect(masterGain);
+          distortion.connect(delay);
+          delay.connect(masterGain);
           masterGain.connect(audioCtx.destination);
 
           const bufferSize = audioCtx.sampleRate * 2;
@@ -272,7 +296,7 @@
           noiseFilter.frequency.value = 4000;
 
           const noiseGain = audioCtx.createGain();
-          noiseGain.gain.value = 0.025; /* Slightly louder hiss */
+          noiseGain.gain.value = 0.025;
 
           noise.connect(noiseFilter);
           noiseFilter.connect(noiseGain);
@@ -289,7 +313,6 @@
           const popOsc = audioCtx.createOscillator();
           const popGain = audioCtx.createGain();
 
-          // Lower, harsher pitch for the tape pop
           popOsc.type = "square";
           popOsc.frequency.setValueAtTime(80, audioCtx.currentTime);
           popOsc.frequency.exponentialRampToValueAtTime(
@@ -327,13 +350,12 @@
             availableSpot.active = true;
             const spot = availableSpot.el;
 
-            // 5. HORIZONTAL TEARING: Analog dropouts are wide and thin, not circular
             const isLargeDropout = Math.random() < 0.05;
             const width = isLargeDropout
-              ? Math.random() * 80 + 20 + "vw" /* Very wide */
+              ? Math.random() * 80 + 20 + "vw"
               : Math.random() * 30 + 5 + "vw";
             const height = isLargeDropout
-              ? Math.random() * 6 + 2 + "px" /* Very thin */
+              ? Math.random() * 6 + 2 + "px"
               : Math.random() * 3 + 1 + "px";
 
             spot.style.width = width;
@@ -341,7 +363,6 @@
 
             spot.style.transform = `translate(${Math.random() * 100}vw, ${Math.random() * 100}vh)`;
 
-            // Mostly static white streaks, occasionally black tape wear
             if (Math.random() < 0.7) {
               spot.style.backgroundColor = `rgba(255, 255, 255, ${Math.random() * 0.4 + 0.2})`;
             } else {
@@ -359,7 +380,7 @@
                 spot.style.display = "none";
                 availableSpot.active = false;
               },
-              Math.random() * 80 + 20 /* Shorter, snappier glitches */,
+              Math.random() * 80 + 20,
             );
           }
         }
